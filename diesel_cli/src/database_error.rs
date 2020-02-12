@@ -35,34 +35,30 @@ impl From<result::ConnectionError> for DatabaseError {
     }
 }
 
-impl Error for DatabaseError {
-    fn description(&self) -> &str {
+impl Error for DatabaseError {}
+
+impl fmt::Display for DatabaseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match *self {
             ProjectRootNotFound => {
                 "Unable to find diesel.toml or Cargo.toml in this directory or any parent directories."
             }
             DatabaseUrlMissing => {
-                "The --database-url argument must be passed, or the DATABASE_URL environment variable must be set."
+                f.write_str("The --database-url argument must be passed, or the DATABASE_URL environment variable must be set.")
             }
-            IoError(ref error) => error
+            IoError(ref error) => f.write_str(&error
                 .source()
-                .map(Error::description)
-                .unwrap_or_else(|| error.description()),
-            QueryError(ref error) => error
+                .map(ToString::to_string)
+                .unwrap_or_else(|| error.to_string())),
+            QueryError(ref error) => f.write_str(&error
                 .source()
-                .map(Error::description)
-                .unwrap_or_else(|| error.description()),
-            ConnectionError(ref error) => error
+                .map(ToString::to_string)
+                .unwrap_or_else(|| error.to_string())),
+            ConnectionError(ref error) => f.write_str(&error
                 .source()
-                .map(Error::description)
-                .unwrap_or_else(|| error.description()),
+                .map(ToString::to_string)
+                .unwrap_or_else(|| error.to_string())),
         }
-    }
-}
-
-impl fmt::Display for DatabaseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.description().fmt(f)
     }
 }
 
